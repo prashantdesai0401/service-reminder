@@ -22,6 +22,8 @@ export default function RootLayout() {
           <Stack.Screen name="item/new" options={{ presentation: 'modal', title: 'Add item' }} />
           <Stack.Screen name="item/[id]" options={{ title: '' }} />
           <Stack.Screen name="item/edit/[id]" options={{ presentation: 'modal', title: 'Edit item' }} />
+          <Stack.Screen name="reminder/new" options={{ presentation: 'modal', title: 'Add reminder' }} />
+          <Stack.Screen name="reminder/[id]" options={{ presentation: 'modal', title: 'Edit reminder' }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

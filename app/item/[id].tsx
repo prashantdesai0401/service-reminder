@@ -2,19 +2,23 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/form';
+import { ReminderCard } from '@/components/reminder-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategory } from '@/constants/categories';
 import { deleteItem, getItem, type Item } from '@/db/items';
+import { listRemindersForItem, type Reminder } from '@/db/reminders';
+import { confirmDestructive } from '@/lib/confirm';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function ItemDetailScreen() {
   const db = useSQLiteContext();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<Item | null | undefined>(undefined);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const tint = useThemeColor({}, 'tint');
   const card = useThemeColor({}, 'card');
   const muted = useThemeColor({}, 'muted');
@@ -23,6 +27,7 @@ export default function ItemDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       getItem(db, Number(id)).then(setItem);
+      listRemindersForItem(db, Number(id)).then(setReminders);
     }, [db, id])
   );
 
@@ -42,17 +47,12 @@ export default function ItemDetailScreen() {
     router.back();
   };
 
-  const confirmDelete = () => {
-    const message = `Delete "${item.name}" and all its reminders and history? This can't be undone.`;
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) remove();
-      return;
-    }
-    Alert.alert('Delete item?', message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: remove },
-    ]);
-  };
+  const confirmDelete = () =>
+    confirmDestructive(
+      'Delete item?',
+      `Delete "${item.name}" and all its reminders and history? This can't be undone.`,
+      remove
+    );
 
   return (
     <ThemedView style={styles.screen}>
@@ -70,11 +70,21 @@ export default function ItemDetailScreen() {
 
         {item.notes ? <ThemedText>{item.notes}</ThemedText> : null}
 
-        <View style={[styles.section, { backgroundColor: card }]}>
-          <ThemedText type="defaultSemiBold">Reminders</ThemedText>
-          <ThemedText style={{ color: muted }}>
-            Service reminders for this item will appear here.
-          </ThemedText>
+        <View style={styles.section}>
+          <ThemedText type="subtitle">Reminders</ThemedText>
+          {reminders.length === 0 ? (
+            <ThemedText style={{ color: muted }}>
+              No reminders yet. Add one for the next service, refill or renewal.
+            </ThemedText>
+          ) : (
+            reminders.map((r) => <ReminderCard key={r.id} reminder={r} />)
+          )}
+          <Button
+            title="Add reminder"
+            onPress={() =>
+              router.push({ pathname: '/reminder/new', params: { itemId: item.id } })
+            }
+          />
         </View>
 
         <View style={styles.actions}>
@@ -96,6 +106,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   headerText: { flex: 1, gap: 2 },
   iconBubble: { width: 60, height: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  section: { borderRadius: 14, padding: 16, gap: 6 },
+  section: { gap: 10 },
   actions: { gap: 12, marginTop: 8 },
 });

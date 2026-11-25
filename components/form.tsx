@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 /** Label + text box. */
-export function TextField({ label, style, ...inputProps }: TextInputProps & { label: string }) {
+export function TextField({ label, style, ...inputProps }: TextInputProps & { label?: string }) {
   const text = useThemeColor({}, 'text');
   const border = useThemeColor({}, 'border');
   const card = useThemeColor({}, 'card');
@@ -14,7 +14,7 @@ export function TextField({ label, style, ...inputProps }: TextInputProps & { la
 
   return (
     <View style={styles.field}>
-      <ThemedText type="defaultSemiBold">{label}</ThemedText>
+      {label ? <ThemedText type="defaultSemiBold">{label}</ThemedText> : null}
       <TextInput
         placeholderTextColor={muted}
         style={[styles.input, { color: text, borderColor: border, backgroundColor: card }, style]}
