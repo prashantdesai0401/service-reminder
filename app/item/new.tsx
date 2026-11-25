@@ -13,7 +13,7 @@ export default function NewItemScreen() {
       onSubmit={async (item) => {
         const id = await createItem(db, item);
         // Swap this form for the new item's page, so "back" returns to the list.
-        router.replace(`/item/${id}`);
+        router.replace({ pathname: '/item/[id]', params: { id } });
       }}
     />
   );

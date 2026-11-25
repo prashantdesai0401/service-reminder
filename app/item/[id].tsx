@@ -12,6 +12,7 @@ import { getCategory } from '@/constants/categories';
 import { deleteItem, getItem, type Item } from '@/db/items';
 import { listRemindersForItem, type Reminder } from '@/db/reminders';
 import { confirmDestructive } from '@/lib/confirm';
+import { resyncNotifications } from '@/lib/notifications';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function ItemDetailScreen() {
@@ -44,6 +45,7 @@ export default function ItemDetailScreen() {
 
   const remove = async () => {
     await deleteItem(db, item.id);
+    await resyncNotifications(db);
     router.back();
   };
 
@@ -91,7 +93,7 @@ export default function ItemDetailScreen() {
           <Button
             title="Edit item"
             variant="secondary"
-            onPress={() => router.push(`/item/edit/${item.id}`)}
+            onPress={() => router.push({ pathname: '/item/edit/[id]', params: { id: item.id } })}
           />
           <Button title="Delete item" variant="danger" onPress={confirmDelete} />
         </View>

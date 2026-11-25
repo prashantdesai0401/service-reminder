@@ -64,4 +64,16 @@ export async function migrateDatabase(db: SQLiteDatabase) {
     version = 1;
     await db.execAsync(`PRAGMA user_version = ${version}`);
   }
+
+  if (version < 2) {
+    // Simple key/value preferences, e.g. what time of day reminders are sent.
+    await db.execAsync(`
+      CREATE TABLE settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+    version = 2;
+    await db.execAsync(`PRAGMA user_version = ${version}`);
+  }
 }

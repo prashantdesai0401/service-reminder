@@ -62,7 +62,7 @@ export default function ItemsScreen() {
             renderItem={({ item }) => {
               const category = getCategory(item.category);
               return (
-                <Link href={`/item/${item.id}`} asChild>
+                <Link href={{ pathname: '/item/[id]', params: { id: item.id } }} asChild>
                   <Pressable style={[styles.row, { backgroundColor: card }]}>
                     <MaterialIcons name={category.icon} size={26} color={tint} />
                     <View style={styles.rowText}>

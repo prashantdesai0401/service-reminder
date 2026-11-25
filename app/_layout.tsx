@@ -2,8 +2,10 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 
+import { NotificationBootstrap } from '@/components/notification-bootstrap';
 import { DATABASE_NAME, migrateDatabase } from '@/db/schema';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -16,6 +18,7 @@ export default function RootLayout() {
 
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDatabase}>
+      {Platform.OS !== 'web' && <NotificationBootstrap />}
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
