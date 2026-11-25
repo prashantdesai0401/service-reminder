@@ -16,8 +16,19 @@ export type NewItem = {
   notes?: string;
 };
 
+/** An item plus its soonest active reminder (if any), for the Items list. */
+export type ItemWithNextDue = Item & { next_due: string | null; next_title: string | null };
+
 export function listItems(db: SQLiteDatabase) {
-  return db.getAllAsync<Item>('SELECT * FROM items ORDER BY name COLLATE NOCASE');
+  return db.getAllAsync<ItemWithNextDue>(
+    `SELECT i.*,
+       (SELECT r.due_date FROM reminders r WHERE r.item_id = i.id AND r.status = 'active'
+        ORDER BY r.due_date LIMIT 1) AS next_due,
+       (SELECT r.title FROM reminders r WHERE r.item_id = i.id AND r.status = 'active'
+        ORDER BY r.due_date LIMIT 1) AS next_title
+     FROM items i
+     ORDER BY i.name COLLATE NOCASE`
+  );
 }
 
 export function getItem(db: SQLiteDatabase, id: number) {

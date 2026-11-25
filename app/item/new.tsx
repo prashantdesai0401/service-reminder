@@ -10,10 +10,15 @@ export default function NewItemScreen() {
   return (
     <ItemForm
       submitLabel="Save item"
-      onSubmit={async (item) => {
+      showTemplates
+      onSubmit={async (item, templateId) => {
         const id = await createItem(db, item);
         // Swap this form for the new item's page, so "back" returns to the list.
         router.replace({ pathname: '/item/[id]', params: { id } });
+        // Started from a template: go straight on to its ready-filled reminder.
+        if (templateId) {
+          router.push({ pathname: '/reminder/new', params: { itemId: id, template: templateId } });
+        }
       }}
     />
   );

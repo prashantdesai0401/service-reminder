@@ -8,16 +8,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CATEGORIES, getCategory } from '@/constants/categories';
-import { listItems, type Item } from '@/db/items';
+import { listItems, type ItemWithNextDue } from '@/db/items';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { daysUntil, dueLabel } from '@/lib/dates';
 
 export default function ItemsScreen() {
   const db = useSQLiteContext();
-  const [items, setItems] = useState<Item[] | null>(null);
+  const [items, setItems] = useState<ItemWithNextDue[] | null>(null);
   const tint = useThemeColor({}, 'tint');
   const onTint = useThemeColor({}, 'onTint');
   const card = useThemeColor({}, 'card');
   const muted = useThemeColor({}, 'muted');
+  const danger = useThemeColor({}, 'danger');
+  const warning = useThemeColor({}, 'warning');
 
   // Reload each time the tab is shown, so new/edited/deleted items appear.
   useFocusEffect(
@@ -45,8 +48,10 @@ export default function ItemsScreen() {
 
         {items && items.length === 0 ? (
           <View style={styles.empty}>
-            <ThemedText style={{ color: muted }}>
-              Nothing here yet. Tap + to add your first item, like your bike or inverter.
+            <MaterialIcons name="build-circle" size={48} color={muted} />
+            <ThemedText type="defaultSemiBold">No items yet</ThemedText>
+            <ThemedText style={[styles.emptyText, { color: muted }]}>
+              Tap + to add your bike, inverter, AC or anything else that needs regular servicing.
             </ThemedText>
           </View>
         ) : (
@@ -67,11 +72,24 @@ export default function ItemsScreen() {
                     <MaterialIcons name={category.icon} size={26} color={tint} />
                     <View style={styles.rowText}>
                       <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
-                      {item.notes ? (
-                        <ThemedText numberOfLines={1} style={{ color: muted }}>
-                          {item.notes}
+                      {item.next_due ? (
+                        <ThemedText
+                          numberOfLines={1}
+                          style={{
+                            color:
+                              daysUntil(item.next_due) <= 0
+                                ? danger
+                                : daysUntil(item.next_due) <= 7
+                                  ? warning
+                                  : muted,
+                          }}>
+                          {item.next_title} · {dueLabel(item.next_due).toLowerCase()}
                         </ThemedText>
-                      ) : null}
+                      ) : (
+                        <ThemedText numberOfLines={1} style={{ color: muted }}>
+                          No reminder set
+                        </ThemedText>
+                      )}
                     </View>
                     <MaterialIcons name="chevron-right" size={24} color={muted} />
                   </Pressable>
@@ -96,7 +114,8 @@ export default function ItemsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   title: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  empty: { padding: 20 },
+  empty: { padding: 32, gap: 12, alignItems: 'center' },
+  emptyText: { textAlign: 'center' },
   list: { paddingHorizontal: 20, paddingBottom: 100, gap: 8 },
   sectionHeader: { marginTop: 16, marginBottom: 4, fontSize: 14, textTransform: 'uppercase' },
   row: {
