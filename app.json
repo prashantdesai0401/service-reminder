@@ -40,7 +40,14 @@
         }
       ],
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Service Reminder to attach photos of bills, receipts and warranty cards.",
+          "cameraPermission": "Allow Service Reminder to take photos of bills, receipts and warranty cards."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

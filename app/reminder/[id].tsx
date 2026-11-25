@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/form';
 import { ReminderForm } from '@/components/reminder-form';
+import { photoFilesFor } from '@/db/attachments';
 import { reactivateReminder } from '@/db/logs';
 import { deleteReminder, getReminder, updateReminder, type Reminder } from '@/db/reminders';
 import { confirmDestructive } from '@/lib/confirm';
 import { resyncNotifications } from '@/lib/notifications';
+import { deletePhotoFiles } from '@/lib/photos';
 
 export default function EditReminderScreen() {
   const db = useSQLiteContext();
@@ -61,7 +63,9 @@ export default function EditReminderScreen() {
                 'Delete reminder?',
                 `Delete "${reminder.title}" and its service history? This can't be undone.`,
                 async () => {
+                  const files = await photoFilesFor(db, { reminderId: reminder.id });
                   await deleteReminder(db, reminder.id);
+                  deletePhotoFiles(files);
                   await resyncNotifications(db);
                   router.back();
                 },

@@ -5,16 +5,24 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/form';
+import { PhotoGrid } from '@/components/photo-grid';
 import { ReminderCard } from '@/components/reminder-card';
 import { ServiceHistory } from '@/components/service-history';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategory } from '@/constants/categories';
+import {
+  addAttachment,
+  listAttachmentsForItem,
+  photoFilesFor,
+  type AttachmentWithContext,
+} from '@/db/attachments';
 import { deleteItem, getItem, type Item } from '@/db/items';
 import { deleteLog, listLogsForItem, type ServiceLogWithTitle } from '@/db/logs';
 import { listRemindersForItem, type Reminder } from '@/db/reminders';
 import { confirmDestructive } from '@/lib/confirm';
 import { resyncNotifications } from '@/lib/notifications';
+import { choosePhoto, deletePhotoFiles } from '@/lib/photos';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function ItemDetailScreen() {
@@ -23,6 +31,7 @@ export default function ItemDetailScreen() {
   const [item, setItem] = useState<Item | null | undefined>(undefined);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [logs, setLogs] = useState<ServiceLogWithTitle[]>([]);
+  const [photos, setPhotos] = useState<AttachmentWithContext[]>([]);
   const tint = useThemeColor({}, 'tint');
   const card = useThemeColor({}, 'card');
   const muted = useThemeColor({}, 'muted');
@@ -32,6 +41,7 @@ export default function ItemDetailScreen() {
     getItem(db, Number(id)).then(setItem);
     listRemindersForItem(db, Number(id)).then(setReminders);
     listLogsForItem(db, Number(id)).then(setLogs);
+    listAttachmentsForItem(db, Number(id)).then(setPhotos);
   }, [db, id]);
   useFocusEffect(load);
 
@@ -46,8 +56,17 @@ export default function ItemDetailScreen() {
 
   const category = getCategory(item.category);
 
+  const addPhoto = async () => {
+    const name = await choosePhoto();
+    if (!name) return;
+    await addAttachment(db, { itemId: item.id }, name);
+    load();
+  };
+
   const remove = async () => {
+    const files = await photoFilesFor(db, { itemId: item.id });
     await deleteItem(db, item.id);
+    deletePhotoFiles(files);
     await resyncNotifications(db);
     router.back();
   };
@@ -56,7 +75,7 @@ export default function ItemDetailScreen() {
     confirmDestructive(
       'Delete item?',
       `Delete "${item.name}" and all its reminders and history? This can't be undone.`,
-      remove
+      remove,
     );
 
   return (
@@ -86,9 +105,7 @@ export default function ItemDetailScreen() {
           )}
           <Button
             title="Add reminder"
-            onPress={() =>
-              router.push({ pathname: '/reminder/new', params: { itemId: item.id } })
-            }
+            onPress={() => router.push({ pathname: '/reminder/new', params: { itemId: item.id } })}
           />
         </View>
 
@@ -99,12 +116,16 @@ export default function ItemDetailScreen() {
               'Delete history entry?',
               `Remove "${log.reminder_title}" on this date from the history? The reminder itself stays as it is.`,
               async () => {
+                const files = await photoFilesFor(db, { logId: log.id });
                 await deleteLog(db, log.id);
+                deletePhotoFiles(files);
                 load();
-              }
+              },
             )
           }
         />
+
+        <PhotoGrid photos={photos} onAdd={addPhoto} />
 
         <View style={styles.actions}>
           <Button
@@ -124,7 +145,13 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 20 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   headerText: { flex: 1, gap: 2 },
-  iconBubble: { width: 60, height: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  iconBubble: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   section: { gap: 10 },
   actions: { gap: 12, marginTop: 8 },
 });

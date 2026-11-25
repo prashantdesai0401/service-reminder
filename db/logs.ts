@@ -33,14 +33,16 @@ export function nextDueAfter(reminder: Reminder, doneOn: string) {
  * - One-time reminder: marked done, so it leaves the Upcoming list.
  */
 export async function markDone(db: SQLiteDatabase, reminder: Reminder, done: DoneInput) {
+  let logId = 0;
   await db.withTransactionAsync(async () => {
-    await db.runAsync(
+    const result = await db.runAsync(
       'INSERT INTO service_logs (reminder_id, done_on, cost, notes) VALUES (?, ?, ?, ?)',
       reminder.id,
       done.done_on,
       done.cost,
       done.notes?.trim() || null
     );
+    logId = result.lastInsertRowId;
 
     const next = nextDueAfter(reminder, done.done_on);
     if (next) {
@@ -53,6 +55,7 @@ export async function markDone(db: SQLiteDatabase, reminder: Reminder, done: Don
       await db.runAsync("UPDATE reminders SET status = 'done' WHERE id = ?", reminder.id);
     }
   });
+  return logId;
 }
 
 /** Puts a done one-time reminder back on the Upcoming list. */
