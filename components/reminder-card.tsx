@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -53,20 +53,39 @@ export function ReminderCard({
         )}
         <View style={styles.body}>
           {withItem && (
-            <ThemedText style={[styles.itemName, { color: muted }]}>{withItem.item_name}</ThemedText>
+            <ThemedText style={[styles.itemName, { color: muted }]}>
+              {withItem.item_name}
+            </ThemedText>
           )}
           <ThemedText type="defaultSemiBold">{reminder.title}</ThemedText>
           <ThemedText style={{ color: done ? muted : dueColor }}>
             {done ? 'Done' : dueLabel(reminder.due_date)}
           </ThemedText>
           <ThemedText style={[styles.small, { color: muted }]}>{details.join(' · ')}</ThemedText>
+          {reminder.prepaid && (
+            <View style={[styles.badge, { borderColor: tint }]}>
+              <ThemedText style={[styles.badgeText, { color: tint }]}>
+                Prepaid
+                {reminder.amount_paid ? ` ${formatMoney(reminder.amount_paid)}` : ''}
+              </ThemedText>
+            </View>
+          )}
         </View>
-        {reminder.prepaid && (
-          <View style={[styles.badge, { borderColor: tint }]}>
-            <ThemedText style={[styles.badgeText, { color: tint }]}>
-              Prepaid{reminder.amount_paid ? ` ${formatMoney(reminder.amount_paid)}` : ''}
-            </ThemedText>
-          </View>
+        {!done && (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/reminder/done/[id]',
+                params: { id: reminder.id },
+              })
+            }
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`Mark ${reminder.title} as done`}
+            style={({ pressed }) => [styles.doneButton, pressed && { opacity: 0.6 }]}>
+            <MaterialIcons name="check-circle-outline" size={32} color={tint} />
+            <ThemedText style={[styles.doneLabel, { color: tint }]}>Done</ThemedText>
+          </Pressable>
         )}
       </Pressable>
     </Link>
@@ -74,11 +93,26 @@ export function ReminderCard({
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 14 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 14,
+    borderRadius: 14,
+  },
   done: { opacity: 0.55 },
   body: { flex: 1, gap: 2 },
   itemName: { fontSize: 13, lineHeight: 18 },
   small: { fontSize: 13, lineHeight: 18 },
-  badge: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  badge: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  doneButton: { alignItems: 'center', paddingLeft: 4 },
+  doneLabel: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
   badgeText: { fontSize: 12, lineHeight: 18, fontWeight: '600' },
 });

@@ -6,10 +6,12 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/form';
 import { ReminderCard } from '@/components/reminder-card';
+import { ServiceHistory } from '@/components/service-history';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategory } from '@/constants/categories';
 import { deleteItem, getItem, type Item } from '@/db/items';
+import { deleteLog, listLogsForItem, type ServiceLogWithTitle } from '@/db/logs';
 import { listRemindersForItem, type Reminder } from '@/db/reminders';
 import { confirmDestructive } from '@/lib/confirm';
 import { resyncNotifications } from '@/lib/notifications';
@@ -20,17 +22,18 @@ export default function ItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<Item | null | undefined>(undefined);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [logs, setLogs] = useState<ServiceLogWithTitle[]>([]);
   const tint = useThemeColor({}, 'tint');
   const card = useThemeColor({}, 'card');
   const muted = useThemeColor({}, 'muted');
 
   // Reload whenever this screen comes back into view (e.g. after editing).
-  useFocusEffect(
-    useCallback(() => {
-      getItem(db, Number(id)).then(setItem);
-      listRemindersForItem(db, Number(id)).then(setReminders);
-    }, [db, id])
-  );
+  const load = useCallback(() => {
+    getItem(db, Number(id)).then(setItem);
+    listRemindersForItem(db, Number(id)).then(setReminders);
+    listLogsForItem(db, Number(id)).then(setLogs);
+  }, [db, id]);
+  useFocusEffect(load);
 
   if (item === undefined) return null;
   if (item === null) {
@@ -88,6 +91,20 @@ export default function ItemDetailScreen() {
             }
           />
         </View>
+
+        <ServiceHistory
+          logs={logs}
+          onLongPress={(log) =>
+            confirmDestructive(
+              'Delete history entry?',
+              `Remove "${log.reminder_title}" on this date from the history? The reminder itself stays as it is.`,
+              async () => {
+                await deleteLog(db, log.id);
+                load();
+              }
+            )
+          }
+        />
 
         <View style={styles.actions}>
           <Button
