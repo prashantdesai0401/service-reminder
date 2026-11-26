@@ -1,17 +1,17 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/components/form';
+import { Icon } from '@/components/icon';
 import { ReminderCard } from '@/components/reminder-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { formatMoney } from '@/constants/money';
 import { listUpcoming, type ReminderWithItem } from '@/db/reminders';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { daysUntil } from '@/lib/dates';
 
 /** Which heading a reminder goes under, by days until it's due. */
@@ -25,15 +25,11 @@ const GROUPS = [
 export default function UpcomingScreen() {
   const db = useSQLiteContext();
   const [reminders, setReminders] = useState<ReminderWithItem[] | null>(null);
-  const muted = useThemeColor({}, 'muted');
-  const danger = useThemeColor({}, 'danger');
-  const tint = useThemeColor({}, 'tint');
-  const card = useThemeColor({}, 'card');
 
   useFocusEffect(
     useCallback(() => {
       listUpcoming(db).then(setReminders);
-    }, [db])
+    }, [db]),
   );
 
   const sections = useMemo(
@@ -42,7 +38,7 @@ export default function UpcomingScreen() {
         title: g.title,
         data: (reminders ?? []).filter((r) => g.test(daysUntil(r.due_date))),
       })).filter((s) => s.data.length > 0),
-    [reminders]
+    [reminders],
   );
 
   const overdue = sections.find((s) => s.title === 'Overdue')?.data.length ?? 0;
@@ -62,13 +58,13 @@ export default function UpcomingScreen() {
         <View style={styles.header}>
           <ThemedText type="title">Upcoming</ThemedText>
           {reminders && reminders.length > 0 && (
-            <ThemedText style={{ color: overdue > 0 ? danger : muted }}>{summary}</ThemedText>
+            <ThemedText style={overdue > 0 ? styles.danger : styles.muted}>{summary}</ThemedText>
           )}
         </View>
 
         {prepaidSoon.length > 0 && (
-          <View style={[styles.prepaid, { backgroundColor: card, borderColor: tint }]}>
-            <MaterialIcons name="savings" size={26} color={tint} />
+          <View style={styles.prepaid}>
+            <Icon name="savings" size={26} color="tint" />
             <ThemedText style={styles.prepaidText}>
               {prepaidTotal > 0 ? `${formatMoney(prepaidTotal)} already paid` : 'Already paid'} for{' '}
               {prepaidSoon.length === 1 ? 'a service' : `${prepaidSoon.length} services`} due within
@@ -79,11 +75,11 @@ export default function UpcomingScreen() {
 
         {reminders && reminders.length === 0 ? (
           <View style={styles.empty}>
-            <MaterialIcons name="notifications-none" size={48} color={muted} />
+            <Icon name="notifications-none" size={48} color="muted" />
             <ThemedText type="defaultSemiBold">No services coming up</ThemedText>
-            <ThemedText style={[styles.emptyText, { color: muted }]}>
-              Add the things you need to look after, like your bike or inverter, and when they
-              need servicing. You&apos;ll be reminded before it&apos;s due.
+            <ThemedText style={[styles.emptyText, styles.muted]}>
+              Add the things you need to look after, like your bike or inverter, and when they need
+              servicing. You&apos;ll be reminded before it&apos;s due.
             </ThemedText>
             <View style={styles.emptyButton}>
               <Button title="Add your first item" onPress={() => router.push('/item/new')} />
@@ -98,7 +94,10 @@ export default function UpcomingScreen() {
             renderSectionHeader={({ section }) => (
               <ThemedText
                 type="defaultSemiBold"
-                style={[styles.sectionHeader, { color: section.title === 'Overdue' ? danger : muted }]}>
+                style={[
+                  styles.sectionHeader,
+                  section.title === 'Overdue' ? styles.danger : styles.muted,
+                ]}>
                 {section.title}
               </ThemedText>
             )}
@@ -110,23 +109,37 @@ export default function UpcomingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8, gap: 4 },
-  empty: { padding: 32, gap: 12, alignItems: 'center' },
+  header: {
+    paddingHorizontal: theme.space(5),
+    paddingTop: theme.space(4),
+    paddingBottom: theme.space(2),
+    gap: theme.space(1),
+  },
+  empty: { padding: theme.space(8), gap: theme.space(3), alignItems: 'center' },
   emptyText: { textAlign: 'center' },
-  emptyButton: { alignSelf: 'stretch', marginTop: 8 },
+  emptyButton: { alignSelf: 'stretch', marginTop: theme.space(2) },
   prepaid: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginHorizontal: 20,
-    marginTop: 8,
-    padding: 14,
-    borderRadius: 14,
+    gap: theme.space(3),
+    marginHorizontal: theme.space(5),
+    marginTop: theme.space(2),
+    padding: theme.space(3.5),
+    borderRadius: theme.radius.xl,
     borderWidth: 1,
+    borderColor: theme.colors.tint,
+    backgroundColor: theme.colors.card,
   },
   prepaidText: { flex: 1 },
-  list: { paddingHorizontal: 20, paddingBottom: 40, gap: 8 },
-  sectionHeader: { marginTop: 16, marginBottom: 4, fontSize: 14, textTransform: 'uppercase' },
-});
+  list: { paddingHorizontal: theme.space(5), paddingBottom: theme.space(10), gap: theme.space(2) },
+  sectionHeader: {
+    marginTop: theme.space(4),
+    marginBottom: theme.space(1),
+    fontSize: theme.type.label.fontSize,
+    textTransform: 'uppercase',
+  },
+  muted: { color: theme.colors.muted },
+  danger: { color: theme.colors.danger },
+}));

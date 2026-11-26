@@ -1,10 +1,10 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { TextField } from '@/components/form';
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { formatDate, parseDateKey, toDateKey } from '@/lib/dates';
 
 /** Label + tappable date that opens the phone's calendar picker. Value is "YYYY-MM-DD". */
@@ -17,11 +17,6 @@ export function DateField({
   value: string;
   onChange: (key: string) => void;
 }) {
-  const text = useThemeColor({}, 'text');
-  const border = useThemeColor({}, 'border');
-  const card = useThemeColor({}, 'card');
-  const tint = useThemeColor({}, 'tint');
-
   // The native picker doesn't exist in a web browser, so type the date there instead.
   if (Platform.OS === 'web') {
     return (
@@ -60,27 +55,26 @@ export function DateField({
   return (
     <View style={styles.field}>
       <ThemedText type="defaultSemiBold">{label}</ThemedText>
-      <Pressable
-        onPress={open}
-        accessibilityRole="button"
-        style={[styles.box, { borderColor: border, backgroundColor: card }]}>
-        <ThemedText style={{ color: text }}>{formatDate(value)}</ThemedText>
-        <MaterialIcons name="calendar-month" size={22} color={tint} />
+      <Pressable onPress={open} accessibilityRole="button" style={styles.box}>
+        <ThemedText>{formatDate(value)}</ThemedText>
+        <Icon name="calendar-month" size={22} color="tint" />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  field: { gap: 6 },
+const styles = StyleSheet.create((theme) => ({
+  field: { gap: theme.space(1.5) },
   box: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.space(3),
+    paddingVertical: theme.space(3),
   },
   iosPicker: { alignSelf: 'flex-start' },
-});
+}));

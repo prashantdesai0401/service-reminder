@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-native';
+import { StyleSheet, withUnistyles } from 'react-native-unistyles';
 
 import { DateField } from '@/components/date-field';
 import { Button, Chip, TextField } from '@/components/form';
@@ -7,10 +8,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CURRENCY } from '@/constants/money';
 import type { ReminderInput, ReminderType } from '@/db/reminders';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { addInterval, todayKey, type RepeatUnit } from '@/lib/dates';
 
-const TITLE_SUGGESTIONS = ['Service', 'Top up distilled water', 'Filter change', 'Insurance renewal'];
+const TITLE_SUGGESTIONS = [
+  'Service',
+  'Top up distilled water',
+  'Filter change',
+  'Insurance renewal',
+];
 const UNITS: RepeatUnit[] = ['days', 'weeks', 'months', 'years'];
 const NOTIFY_OPTIONS = [
   { days: 30, label: '30 days before' },
@@ -38,18 +43,18 @@ export function ReminderForm({
   const [repeatUnit, setRepeatUnit] = useState<RepeatUnit>(initial?.repeat_unit ?? 'months');
   const [notify, setNotify] = useState<number[]>(initial?.notify_days_before ?? [7, 1, 0]);
   const [prepaid, setPrepaid] = useState(initial?.prepaid ?? false);
-  const [amount, setAmount] = useState(initial?.amount_paid != null ? String(initial.amount_paid) : '');
+  const [amount, setAmount] = useState(
+    initial?.amount_paid != null ? String(initial.amount_paid) : '',
+  );
   const [providerName, setProviderName] = useState(initial?.provider_name ?? '');
   const [providerPhone, setProviderPhone] = useState(initial?.provider_phone ?? '');
-  const tint = useThemeColor({}, 'tint');
-  const muted = useThemeColor({}, 'muted');
 
   const every = parseInt(repeatEvery, 10);
   const canSave = title.trim().length > 0 && (type === 'once' || every > 0);
 
   const toggleNotify = (days: number) =>
     setNotify((list) =>
-      list.includes(days) ? list.filter((d) => d !== days) : [...list, days].sort((a, b) => b - a)
+      list.includes(days) ? list.filter((d) => d !== days) : [...list, days].sort((a, b) => b - a),
     );
 
   const submit = () =>
@@ -89,8 +94,18 @@ export function ReminderForm({
           <View style={styles.field}>
             <ThemedText type="defaultSemiBold">How often?</ThemedText>
             <View style={styles.chips}>
-              <Chip label="One time" icon="event" selected={type === 'once'} onPress={() => setType('once')} />
-              <Chip label="Repeats" icon="repeat" selected={type === 'repeat'} onPress={() => setType('repeat')} />
+              <Chip
+                label="One time"
+                icon="event"
+                selected={type === 'once'}
+                onPress={() => setType('once')}
+              />
+              <Chip
+                label="Repeats"
+                icon="repeat"
+                selected={type === 'repeat'}
+                onPress={() => setType('repeat')}
+              />
             </View>
           </View>
 
@@ -107,7 +122,12 @@ export function ReminderForm({
                 />
                 <View style={[styles.chips, styles.repeatUnits]}>
                   {UNITS.map((u) => (
-                    <Chip key={u} label={u} selected={repeatUnit === u} onPress={() => setRepeatUnit(u)} />
+                    <Chip
+                      key={u}
+                      label={u}
+                      selected={repeatUnit === u}
+                      onPress={() => setRepeatUnit(u)}
+                    />
                   ))}
                 </View>
               </View>
@@ -133,16 +153,18 @@ export function ReminderForm({
               ))}
             </View>
             {notify.length === 0 && (
-              <ThemedText style={{ color: muted }}>No notifications will be sent.</ThemedText>
+              <ThemedText style={styles.muted}>No notifications will be sent.</ThemedText>
             )}
           </View>
 
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
               <ThemedText type="defaultSemiBold">Already paid in advance</ThemedText>
-              <ThemedText style={{ color: muted }}>So you don&apos;t waste a prepaid service</ThemedText>
+              <ThemedText style={styles.muted}>
+                So you don&apos;t waste a prepaid service
+              </ThemedText>
             </View>
-            <Switch value={prepaid} onValueChange={setPrepaid} trackColor={{ true: tint }} />
+            <ThemedSwitch value={prepaid} onValueChange={setPrepaid} />
           </View>
 
           {prepaid && (
@@ -177,14 +199,20 @@ export function ReminderForm({
   );
 }
 
-const styles = StyleSheet.create({
+// Switch whose "on" track uses the theme's accent colour.
+const ThemedSwitch = withUnistyles(Switch, (theme) => ({
+  trackColor: { true: theme.colors.tint },
+}));
+
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  content: { padding: 20, gap: 22, paddingBottom: 40 },
-  field: { gap: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  repeatRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  content: { padding: theme.space(5), gap: theme.space(5.5), paddingBottom: theme.space(10) },
+  field: { gap: theme.space(2) },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(2) },
+  repeatRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space(3) },
   repeatInput: { width: 64, textAlign: 'center' },
   repeatUnits: { flex: 1 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space(3) },
   switchText: { flex: 1 },
-});
+  muted: { color: theme.colors.muted },
+}));

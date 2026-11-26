@@ -1,14 +1,14 @@
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Chip } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getReminderHour, setReminderHour } from '@/db/settings';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   countScheduled,
   getPermission,
@@ -39,9 +39,6 @@ export default function SettingsScreen() {
   const [hour, setHour] = useState<number | null>(null);
   const [scheduled, setScheduled] = useState(0);
   const [testSent, setTestSent] = useState(false);
-  const card = useThemeColor({}, 'card');
-  const muted = useThemeColor({}, 'muted');
-  const danger = useThemeColor({}, 'danger');
 
   const refresh = useCallback(async () => {
     setPermission(await getPermission());
@@ -52,7 +49,7 @@ export default function SettingsScreen() {
   useFocusEffect(
     useCallback(() => {
       refresh();
-    }, [refresh])
+    }, [refresh]),
   );
 
   const turnOn = async () => {
@@ -81,16 +78,18 @@ export default function SettingsScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <ThemedText type="title">Settings</ThemedText>
 
-          <View style={[styles.section, { backgroundColor: card }]}>
+          <View style={styles.section}>
             <ThemedText type="defaultSemiBold">Notifications</ThemedText>
             {permission && (
-              <ThemedText style={{ color: permission === 'granted' ? muted : danger }}>
+              <ThemedText style={permission === 'granted' ? styles.muted : styles.danger}>
                 {PERMISSION_TEXT[permission]}
               </ThemedText>
             )}
             {permission === 'granted' && (
-              <ThemedText style={{ color: muted }}>
-                {scheduled === 1 ? '1 reminder notification' : `${scheduled} reminder notifications`}{' '}
+              <ThemedText style={styles.muted}>
+                {scheduled === 1
+                  ? '1 reminder notification'
+                  : `${scheduled} reminder notifications`}{' '}
                 scheduled.
               </ThemedText>
             )}
@@ -102,7 +101,9 @@ export default function SettingsScreen() {
             )}
             {permission === 'granted' && (
               <Button
-                title={testSent ? 'Sent — it will arrive in 10 seconds' : 'Send a test notification'}
+                title={
+                  testSent ? 'Sent — it will arrive in 10 seconds' : 'Send a test notification'
+                }
                 variant="secondary"
                 disabled={testSent}
                 onPress={test}
@@ -110,11 +111,9 @@ export default function SettingsScreen() {
             )}
           </View>
 
-          <View style={[styles.section, { backgroundColor: card }]}>
+          <View style={styles.section}>
             <ThemedText type="defaultSemiBold">Remind me at</ThemedText>
-            <ThemedText style={{ color: muted }}>
-              What time of day reminders arrive.
-            </ThemedText>
+            <ThemedText style={styles.muted}>What time of day reminders arrive.</ThemedText>
             <View style={styles.chips}>
               {HOURS.map((h) => (
                 <Chip
@@ -127,9 +126,9 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <ThemedText style={[styles.footnote, { color: muted }]}>
-            If a service is still not marked done, you&apos;ll get extra nudges 1, 3 and 7 days after
-            it was due.
+          <ThemedText style={[styles.footnote, styles.muted]}>
+            If a service is still not marked done, you&apos;ll get extra nudges 1, 3 and 7 days
+            after it was due.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>
@@ -137,10 +136,17 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  content: { padding: 20, paddingTop: 16, gap: 16 },
-  section: { borderRadius: 14, padding: 16, gap: 10 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  footnote: { fontSize: 14 },
-});
+  content: { padding: theme.space(5), paddingTop: theme.space(4), gap: theme.space(4) },
+  section: {
+    borderRadius: theme.radius.xl,
+    padding: theme.space(4),
+    gap: theme.space(2.5),
+    backgroundColor: theme.colors.card,
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(2) },
+  footnote: { fontSize: theme.type.label.fontSize },
+  muted: { color: theme.colors.muted },
+  danger: { color: theme.colors.danger },
+}));

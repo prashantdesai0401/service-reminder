@@ -2,8 +2,9 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/components/form';
 import { deleteAttachment, getAttachment, type AttachmentWithContext } from '@/db/attachments';
@@ -52,9 +53,9 @@ export default function PhotoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#000' },
+const styles = StyleSheet.create((theme) => ({
+  screen: { flex: 1, backgroundColor: theme.colors.media },
   image: { flex: 1 },
-  footer: { padding: 16, gap: 12 },
-  caption: { color: '#fff', fontSize: 15, textAlign: 'center' },
-});
+  footer: { padding: theme.space(4), gap: theme.space(3) },
+  caption: { color: theme.colors.onMedia, fontSize: 15, textAlign: 'center' },
+}));

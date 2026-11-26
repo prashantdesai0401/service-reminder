@@ -1,32 +1,26 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, SectionList, StyleSheet, View } from 'react-native';
+import { Pressable, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native-unistyles';
 
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CATEGORIES, getCategory } from '@/constants/categories';
 import { listItems, type ItemWithNextDue } from '@/db/items';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { daysUntil, dueLabel } from '@/lib/dates';
 
 export default function ItemsScreen() {
   const db = useSQLiteContext();
   const [items, setItems] = useState<ItemWithNextDue[] | null>(null);
-  const tint = useThemeColor({}, 'tint');
-  const onTint = useThemeColor({}, 'onTint');
-  const card = useThemeColor({}, 'card');
-  const muted = useThemeColor({}, 'muted');
-  const danger = useThemeColor({}, 'danger');
-  const warning = useThemeColor({}, 'warning');
 
   // Reload each time the tab is shown, so new/edited/deleted items appear.
   useFocusEffect(
     useCallback(() => {
       listItems(db).then(setItems);
-    }, [db])
+    }, [db]),
   );
 
   // Group items under their category, in the order categories are defined.
@@ -36,7 +30,7 @@ export default function ItemsScreen() {
         title: c.label,
         data: (items ?? []).filter((i) => i.category === c.id),
       })).filter((s) => s.data.length > 0),
-    [items]
+    [items],
   );
 
   return (
@@ -48,9 +42,9 @@ export default function ItemsScreen() {
 
         {items && items.length === 0 ? (
           <View style={styles.empty}>
-            <MaterialIcons name="build-circle" size={48} color={muted} />
+            <Icon name="build-circle" size={48} color="muted" />
             <ThemedText type="defaultSemiBold">No items yet</ThemedText>
-            <ThemedText style={[styles.emptyText, { color: muted }]}>
+            <ThemedText style={[styles.emptyText, styles.muted]}>
               Tap + to add your bike, inverter, AC or anything else that needs regular servicing.
             </ThemedText>
           </View>
@@ -60,7 +54,7 @@ export default function ItemsScreen() {
             keyExtractor={(i) => String(i.id)}
             contentContainerStyle={styles.list}
             renderSectionHeader={({ section }) => (
-              <ThemedText type="defaultSemiBold" style={[styles.sectionHeader, { color: muted }]}>
+              <ThemedText type="defaultSemiBold" style={[styles.sectionHeader, styles.muted]}>
                 {section.title}
               </ThemedText>
             )}
@@ -68,30 +62,29 @@ export default function ItemsScreen() {
               const category = getCategory(item.category);
               return (
                 <Link href={{ pathname: '/item/[id]', params: { id: item.id } }} asChild>
-                  <Pressable style={[styles.row, { backgroundColor: card }]}>
-                    <MaterialIcons name={category.icon} size={26} color={tint} />
+                  <Pressable style={styles.row}>
+                    <Icon name={category.icon} size={26} color="tint" />
                     <View style={styles.rowText}>
                       <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
                       {item.next_due ? (
                         <ThemedText
                           numberOfLines={1}
-                          style={{
-                            color:
-                              daysUntil(item.next_due) <= 0
-                                ? danger
-                                : daysUntil(item.next_due) <= 7
-                                  ? warning
-                                  : muted,
-                          }}>
+                          style={
+                            daysUntil(item.next_due) <= 0
+                              ? styles.danger
+                              : daysUntil(item.next_due) <= 7
+                                ? styles.warning
+                                : styles.muted
+                          }>
                           {item.next_title} · {dueLabel(item.next_due).toLowerCase()}
                         </ThemedText>
                       ) : (
-                        <ThemedText numberOfLines={1} style={{ color: muted }}>
+                        <ThemedText numberOfLines={1} style={styles.muted}>
                           No reminder set
                         </ThemedText>
                       )}
                     </View>
-                    <MaterialIcons name="chevron-right" size={24} color={muted} />
+                    <Icon name="chevron-right" size={24} color="muted" />
                   </Pressable>
                 </Link>
               );
@@ -103,42 +96,57 @@ export default function ItemsScreen() {
           onPress={() => router.push('/item/new')}
           accessibilityRole="button"
           accessibilityLabel="Add item"
-          style={({ pressed }) => [styles.fab, { backgroundColor: tint, opacity: pressed ? 0.8 : 1 }]}>
-          <MaterialIcons name="add" size={30} color={onTint} />
+          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}>
+          <Icon name="add" size={30} color="onTint" />
         </Pressable>
       </SafeAreaView>
     </ThemedView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  title: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  empty: { padding: 32, gap: 12, alignItems: 'center' },
+  title: {
+    paddingHorizontal: theme.space(5),
+    paddingTop: theme.space(4),
+    paddingBottom: theme.space(2),
+  },
+  empty: { padding: theme.space(8), gap: theme.space(3), alignItems: 'center' },
   emptyText: { textAlign: 'center' },
-  list: { paddingHorizontal: 20, paddingBottom: 100, gap: 8 },
-  sectionHeader: { marginTop: 16, marginBottom: 4, fontSize: 14, textTransform: 'uppercase' },
+  list: { paddingHorizontal: theme.space(5), paddingBottom: 100, gap: theme.space(2) },
+  sectionHeader: {
+    marginTop: theme.space(4),
+    marginBottom: theme.space(1),
+    fontSize: theme.type.label.fontSize,
+    textTransform: 'uppercase',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 14,
-    borderRadius: 14,
+    gap: theme.space(3.5),
+    padding: theme.space(3.5),
+    borderRadius: theme.radius.xl,
+    backgroundColor: theme.colors.card,
   },
   rowText: { flex: 1 },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
+    right: theme.space(5),
+    bottom: theme.space(5),
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.tint,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: theme.colors.media,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
   },
-});
+  fabPressed: { opacity: 0.8 },
+  muted: { color: theme.colors.muted },
+  danger: { color: theme.colors.danger },
+  warning: { color: theme.colors.warning },
+}));

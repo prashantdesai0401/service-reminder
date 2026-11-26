@@ -1,25 +1,20 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { StyleSheet, withUnistyles } from 'react-native-unistyles';
 
+import { Icon, type IconName } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
+
+// TextInput with the placeholder colour taken from the theme.
+const ThemedTextInput = withUnistyles(TextInput, (theme) => ({
+  placeholderTextColor: theme.colors.muted,
+}));
 
 /** Label + text box. */
 export function TextField({ label, style, ...inputProps }: TextInputProps & { label?: string }) {
-  const text = useThemeColor({}, 'text');
-  const border = useThemeColor({}, 'border');
-  const card = useThemeColor({}, 'card');
-  const muted = useThemeColor({}, 'muted');
-
   return (
     <View style={styles.field}>
       {label ? <ThemedText type="defaultSemiBold">{label}</ThemedText> : null}
-      <TextInput
-        placeholderTextColor={muted}
-        style={[styles.input, { color: text, borderColor: border, backgroundColor: card }, style]}
-        {...inputProps}
-      />
+      <ThemedTextInput style={[styles.input, style]} {...inputProps} />
     </View>
   );
 }
@@ -32,27 +27,18 @@ export function Chip({
   onPress,
 }: {
   label: string;
-  icon?: ComponentProps<typeof MaterialIcons>['name'];
+  icon?: IconName;
   selected: boolean;
   onPress: () => void;
 }) {
-  const tint = useThemeColor({}, 'tint');
-  const onTint = useThemeColor({}, 'onTint');
-  const border = useThemeColor({}, 'border');
-  const text = useThemeColor({}, 'text');
-  const color = selected ? onTint : text;
-
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      style={[
-        styles.chip,
-        { borderColor: selected ? tint : border, backgroundColor: selected ? tint : 'transparent' },
-      ]}>
-      {icon && <MaterialIcons name={icon} size={18} color={color} />}
-      <ThemedText style={{ color }}>{label}</ThemedText>
+      style={[styles.chip, selected && styles.chipSelected]}>
+      {icon && <Icon name={icon} size={18} color={selected ? 'onTint' : 'text'} />}
+      <ThemedText style={selected && styles.onTint}>{label}</ThemedText>
     </Pressable>
   );
 }
@@ -69,13 +55,6 @@ export function Button({
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
-  const tint = useThemeColor({}, 'tint');
-  const onTint = useThemeColor({}, 'onTint');
-  const danger = useThemeColor({}, 'danger');
-
-  const filled = variant === 'primary';
-  const accent = variant === 'danger' ? danger : tint;
-
   return (
     <Pressable
       onPress={onPress}
@@ -83,38 +62,60 @@ export function Button({
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.button,
-        { borderColor: accent, backgroundColor: filled ? accent : 'transparent' },
-        (pressed || disabled) && { opacity: disabled ? 0.4 : 0.7 },
+        variant === 'primary' && styles.buttonPrimary,
+        variant === 'danger' && styles.buttonDanger,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
       ]}>
-      <ThemedText type="defaultSemiBold" style={{ color: filled ? onTint : accent }}>
+      <ThemedText
+        type="defaultSemiBold"
+        style={
+          variant === 'primary' ? styles.onTint : variant === 'danger' ? styles.danger : styles.tint
+        }>
         {title}
       </ThemedText>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  field: { gap: 6 },
+const styles = StyleSheet.create((theme) => ({
+  field: { gap: theme.space(1.5) },
   input: {
+    color: theme.colors.text,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.space(3),
+    paddingVertical: theme.space(2.5),
+    fontSize: theme.type.body.fontSize,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: theme.space(1.5),
     borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.full,
+    paddingHorizontal: theme.space(3),
+    paddingVertical: theme.space(1.5),
+  },
+  chipSelected: {
+    borderColor: theme.colors.tint,
+    backgroundColor: theme.colors.tint,
   },
   button: {
     alignItems: 'center',
     borderWidth: 1.5,
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderColor: theme.colors.tint,
+    borderRadius: theme.radius.lg,
+    paddingVertical: theme.space(3.5),
   },
-});
+  buttonPrimary: { backgroundColor: theme.colors.tint },
+  buttonDanger: { borderColor: theme.colors.danger },
+  pressed: { opacity: 0.7 },
+  disabled: { opacity: 0.4 },
+  onTint: { color: theme.colors.onTint },
+  tint: { color: theme.colors.tint },
+  danger: { color: theme.colors.danger },
+}));

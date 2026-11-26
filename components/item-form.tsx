@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Chip, TextField } from '@/components/form';
 import { ThemedText } from '@/components/themed-text';
@@ -100,10 +101,10 @@ export function ItemForm({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  content: { padding: 20, gap: 20 },
-  field: { gap: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  content: { padding: theme.space(5), gap: theme.space(5) },
+  field: { gap: theme.space(2) },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(2) },
   notes: { minHeight: 90, textAlignVertical: 'top' },
-});
+}));

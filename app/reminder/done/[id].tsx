@@ -1,26 +1,19 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { DateField } from '@/components/date-field';
 import { Button, TextField } from '@/components/form';
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CURRENCY } from '@/constants/money';
 import { addAttachment } from '@/db/attachments';
 import { markDone, nextDueAfter } from '@/db/logs';
 import { getReminder, type Reminder } from '@/db/reminders';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { formatDate, todayKey } from '@/lib/dates';
 import { resyncNotifications } from '@/lib/notifications';
 import { choosePhoto, deletePhotoFiles, photoUri } from '@/lib/photos';
@@ -34,10 +27,6 @@ export default function MarkDoneScreen() {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
-  const border = useThemeColor({}, 'border');
-  const tint = useThemeColor({}, 'tint');
-  const card = useThemeColor({}, 'card');
-  const muted = useThemeColor({}, 'muted');
 
   useEffect(() => {
     getReminder(db, Number(id)).then((r) => {
@@ -120,14 +109,14 @@ export default function MarkDoneScreen() {
                 onPress={addPhoto}
                 accessibilityRole="button"
                 accessibilityLabel="Add receipt photo"
-                style={[styles.thumb, styles.addThumb, { borderColor: border }]}>
-                <MaterialIcons name="add-a-photo" size={24} color={tint} />
+                style={[styles.thumb, styles.addThumb]}>
+                <Icon name="add-a-photo" size={24} color="tint" />
               </Pressable>
             </View>
           </View>
 
-          <View style={[styles.preview, { backgroundColor: card }]}>
-            <ThemedText style={{ color: muted }}>
+          <View style={styles.preview}>
+            <ThemedText style={styles.muted}>
               {next
                 ? `Next reminder will be set for ${formatDate(next)}.`
                 : 'This one-time reminder will move to the item’s history.'}
@@ -141,18 +130,24 @@ export default function MarkDoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  content: { padding: 20, gap: 20 },
+  content: { padding: theme.space(5), gap: theme.space(5) },
   notes: { minHeight: 80, textAlignVertical: 'top' },
-  preview: { borderRadius: 12, padding: 14 },
-  field: { gap: 8 },
-  photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  thumb: { width: 72, height: 72, borderRadius: 10 },
+  preview: {
+    borderRadius: theme.radius.lg,
+    padding: theme.space(3.5),
+    backgroundColor: theme.colors.card,
+  },
+  field: { gap: theme.space(2) },
+  photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(2) },
+  thumb: { width: 72, height: 72, borderRadius: theme.radius.md },
   addThumb: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
+    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+  muted: { color: theme.colors.muted },
+}));

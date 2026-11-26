@@ -1,18 +1,18 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { useUnistyles } from 'react-native-unistyles';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  // React Navigation takes plain colour values, so read the current theme here.
+  const { theme } = useUnistyles();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: theme.colors.tint,
         headerShown: false,
         tabBarButton: HapticTab,
       }}>

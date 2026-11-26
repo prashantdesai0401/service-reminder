@@ -1,23 +1,20 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Link, router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategory } from '@/constants/categories';
 import { formatMoney } from '@/constants/money';
 import type { Reminder, ReminderWithItem } from '@/db/reminders';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { daysUntil, dueLabel, formatDate, repeatLabel } from '@/lib/dates';
 
-/** Colour for how urgent a due date is: red overdue/today, amber within a week, otherwise muted. */
-function useDueColor(dueDate: string) {
-  const danger = useThemeColor({}, 'danger');
-  const warning = useThemeColor({}, 'warning');
-  const muted = useThemeColor({}, 'muted');
+/** How urgent a due date is: red overdue/today, amber within a week, otherwise muted. */
+function dueStyle(dueDate: string) {
   const days = daysUntil(dueDate);
-  if (days <= 0) return danger;
-  if (days <= 7) return warning;
-  return muted;
+  if (days <= 0) return styles.danger;
+  if (days <= 7) return styles.warning;
+  return styles.muted;
 }
 
 /**
@@ -31,10 +28,6 @@ export function ReminderCard({
   reminder: Reminder | ReminderWithItem;
   showItem?: boolean;
 }) {
-  const card = useThemeColor({}, 'card');
-  const tint = useThemeColor({}, 'tint');
-  const muted = useThemeColor({}, 'muted');
-  const dueColor = useDueColor(reminder.due_date);
   const done = reminder.status === 'done';
   const withItem = showItem && 'item_name' in reminder ? reminder : null;
 
@@ -47,24 +40,26 @@ export function ReminderCard({
 
   return (
     <Link href={{ pathname: '/reminder/[id]', params: { id: reminder.id } }} asChild>
-      <Pressable style={[styles.card, { backgroundColor: card }, done && styles.done]}>
+      <Pressable style={[styles.card, done && styles.done]}>
         {withItem && (
-          <MaterialIcons name={getCategory(withItem.item_category).icon} size={26} color={tint} />
+          <Icon name={getCategory(withItem.item_category).icon} size={26} color="tint" />
         )}
         <View style={styles.body}>
           {withItem && (
-            <ThemedText style={[styles.itemName, { color: muted }]}>
+            <ThemedText type="small" style={styles.muted}>
               {withItem.item_name}
             </ThemedText>
           )}
           <ThemedText type="defaultSemiBold">{reminder.title}</ThemedText>
-          <ThemedText style={{ color: done ? muted : dueColor }}>
+          <ThemedText style={done ? styles.muted : dueStyle(reminder.due_date)}>
             {done ? 'Done' : dueLabel(reminder.due_date)}
           </ThemedText>
-          <ThemedText style={[styles.small, { color: muted }]}>{details.join(' · ')}</ThemedText>
+          <ThemedText type="small" style={styles.muted}>
+            {details.join(' · ')}
+          </ThemedText>
           {reminder.prepaid && (
-            <View style={[styles.badge, { borderColor: tint }]}>
-              <ThemedText style={[styles.badgeText, { color: tint }]}>
+            <View style={styles.badge}>
+              <ThemedText type="caption" style={styles.badgeText}>
                 Prepaid
                 {reminder.amount_paid ? ` ${formatMoney(reminder.amount_paid)}` : ''}
               </ThemedText>
@@ -82,9 +77,11 @@ export function ReminderCard({
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={`Mark ${reminder.title} as done`}
-            style={({ pressed }) => [styles.doneButton, pressed && { opacity: 0.6 }]}>
-            <MaterialIcons name="check-circle-outline" size={32} color={tint} />
-            <ThemedText style={[styles.doneLabel, { color: tint }]}>Done</ThemedText>
+            style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
+            <Icon name="check-circle-outline" size={32} color="tint" />
+            <ThemedText type="caption" style={styles.tint}>
+              Done
+            </ThemedText>
           </Pressable>
         )}
       </Pressable>
@@ -92,27 +89,31 @@ export function ReminderCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 14,
-    borderRadius: 14,
+    gap: theme.space(3.5),
+    padding: theme.space(3.5),
+    borderRadius: theme.radius.xl,
+    backgroundColor: theme.colors.card,
   },
   done: { opacity: 0.55 },
-  body: { flex: 1, gap: 2 },
-  itemName: { fontSize: 13, lineHeight: 18 },
-  small: { fontSize: 13, lineHeight: 18 },
+  body: { flex: 1, gap: theme.space(0.5) },
   badge: {
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginTop: 4,
+    borderColor: theme.colors.tint,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space(2),
+    paddingVertical: theme.space(0.5),
+    marginTop: theme.space(1),
   },
-  doneButton: { alignItems: 'center', paddingLeft: 4 },
-  doneLabel: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
-  badgeText: { fontSize: 12, lineHeight: 18, fontWeight: '600' },
-});
+  badgeText: { color: theme.colors.tint, lineHeight: 18 },
+  doneButton: { alignItems: 'center', paddingLeft: theme.space(1) },
+  pressed: { opacity: 0.6 },
+  muted: { color: theme.colors.muted },
+  tint: { color: theme.colors.tint },
+  danger: { color: theme.colors.danger },
+  warning: { color: theme.colors.warning },
+}));

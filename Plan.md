@@ -4,8 +4,9 @@ What's built, how it's put together, and what comes next.
 For *why* the app exists and the principles behind it, see [intent.md](intent.md).
 For building and installing the Android app, see [BUILDING.md](BUILDING.md).
 
-**Status (25 Nov 2026):** version 1 is complete and installed as a real Android app.
-Notifications are confirmed working with the app closed.
+**Status (26 Nov 2026):** version 1 is complete and installed as a real Android app.
+Notifications are confirmed working with the app closed. Version 1.1 work has started: the app
+is on Expo SDK 58 with Unistyles 3 styling, built and tested with a development build.
 
 ---
 
@@ -13,9 +14,11 @@ Notifications are confirmed working with the app closed.
 
 | Decision | Choice | Why |
 |---|---|---|
-| Platform | Android first, built with React Native + Expo (SDK 54) | One codebase; iPhone possible later |
+| Platform | Android first, built with React Native + Expo (SDK 58, React Native 0.88) | One codebase; iPhone possible later |
 | Storage | On the phone only (SQLite) | No login, works offline, private. Cloud is optional later |
-| Notifications | Scheduled on the phone (`expo-notifications`) | Work offline and in Expo Go. No server needed |
+| Notifications | Scheduled on the phone (`expo-notifications`) | Work offline. No server needed |
+| Styling | Unistyles 3, with all tokens (colours, spacing, radius, type) in `unistyles.ts` | One place to apply the Figma design system; light/dark switch automatically |
+| Testing on the phone | Development build ("Service Reminder (Dev)", its own app ID) instead of Expo Go | Unistyles needs native code that Expo Go doesn't have; separate ID keeps real data safe |
 | Reliability | Rebuild *all* scheduled notifications from the database on every change and every app open | Stays correct after edits, deletes and phone restarts |
 | Dates | Stored as plain calendar days (`YYYY-MM-DD`) | "Due 1 Sep" stays 1 Sep regardless of time zone |
 | Repeat logic | Next due = the date it was **actually done** + interval | Being late doesn't make the next one due sooner |
@@ -54,13 +57,20 @@ app/                      Screens (each file = one screen; folders = URL paths)
   reminder/[id].tsx       Edit / delete / mark done
   reminder/done/[id].tsx  Mark as done (date, cost, notes, receipt)
   photo/[id].tsx          Full-screen photo
-components/               Reusable building blocks (cards, forms, photo grid…)
+components/               Reusable building blocks (cards, forms, photo grid, Icon…)
 db/                       Everything that reads or writes saved data
   schema.ts               Tables and upgrades (add a new numbered step to change them)
   items.ts reminders.ts logs.ts attachments.ts settings.ts
 lib/                      Logic with no screen: dates, notifications, photos, confirm dialog
-constants/                Theme colours, categories, templates, currency
+constants/                Categories, templates, currency
+unistyles.ts              Design tokens: light/dark colours, space(), radius, type scale
+index.ts                  App entry: loads Unistyles, then the router
 ```
+
+**Styling pattern:** each file creates its styles with
+`StyleSheet.create((theme) => ({ ... }))` from `react-native-unistyles`, reading
+`theme.colors.*`, `theme.space(n)` (n × 4 px), `theme.radius.*` and `theme.type.*`.
+Icons take a colour token: `<Icon name="add" color="tint" />`.
 
 **Data model:** `items` → many `reminders` → many `service_logs`. `attachments` (photos)
 belong to an item or to a service log. `settings` holds preferences such as reminder time.
@@ -79,7 +89,9 @@ All data lives only on the phone, so a lost or reset phone means losing history 
 
 ### 2. Apply the Figma designs
 Replace the default look with the designed one.
-- Colour, type and spacing tokens go into `constants/theme.ts`. Restyle `components/form.tsx`, the cards and the screens.
+- ✅ Groundwork done: Expo SDK 58, development build, all styling on Unistyles 3 with tokens.
+- Put the Figma colour, type, spacing and radius values into `unistyles.ts`; then adjust layouts screen by screen.
+- Half-step spacing (e.g. `space(1.5)` = 6 px) marks off-grid values from v1, which are worth snapping to the design grid.
 - Possibly a custom font, app icon and splash screen.
 - **Done when:** each screen matches its Figma frame in light and dark mode.
 
@@ -91,7 +103,7 @@ Replace the default look with the designed one.
 - Haptic feedback on Done.
 
 ### 4. Release
-- Rebuild the APK. This also drops the unused microphone permission, which is already fixed in the code.
+- Rebuild the APK as version 1.1.0 (versionCode 2). This also drops the unused microphone permission, which is already fixed in the code.
 - Raise `version` and `android.versionCode` in `app.json` for every release (see BUILDING.md).
 
 ---

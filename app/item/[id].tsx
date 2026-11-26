@@ -1,10 +1,11 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '@/components/form';
+import { Icon } from '@/components/icon';
 import { PhotoGrid } from '@/components/photo-grid';
 import { ReminderCard } from '@/components/reminder-card';
 import { ServiceHistory } from '@/components/service-history';
@@ -23,7 +24,6 @@ import { listRemindersForItem, type Reminder } from '@/db/reminders';
 import { confirmDestructive } from '@/lib/confirm';
 import { resyncNotifications } from '@/lib/notifications';
 import { choosePhoto, deletePhotoFiles } from '@/lib/photos';
-import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function ItemDetailScreen() {
   const db = useSQLiteContext();
@@ -32,9 +32,6 @@ export default function ItemDetailScreen() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [logs, setLogs] = useState<ServiceLogWithTitle[]>([]);
   const [photos, setPhotos] = useState<AttachmentWithContext[]>([]);
-  const tint = useThemeColor({}, 'tint');
-  const card = useThemeColor({}, 'card');
-  const muted = useThemeColor({}, 'muted');
 
   // Reload whenever this screen comes back into view (e.g. after editing).
   const load = useCallback(() => {
@@ -83,12 +80,12 @@ export default function ItemDetailScreen() {
       <Stack.Screen options={{ title: item.name }} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <View style={[styles.iconBubble, { backgroundColor: card }]}>
-            <MaterialIcons name={category.icon} size={32} color={tint} />
+          <View style={styles.iconBubble}>
+            <Icon name={category.icon} size={32} color="tint" />
           </View>
           <View style={styles.headerText}>
             <ThemedText type="subtitle">{item.name}</ThemedText>
-            <ThemedText style={{ color: muted }}>{category.label}</ThemedText>
+            <ThemedText style={styles.muted}>{category.label}</ThemedText>
           </View>
         </View>
 
@@ -97,7 +94,7 @@ export default function ItemDetailScreen() {
         <View style={styles.section}>
           <ThemedText type="subtitle">Reminders</ThemedText>
           {reminders.length === 0 ? (
-            <ThemedText style={{ color: muted }}>
+            <ThemedText style={styles.muted}>
               No reminders yet. Add one for the next service, refill or renewal.
             </ThemedText>
           ) : (
@@ -140,18 +137,20 @@ export default function ItemDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1 },
-  content: { padding: 20, gap: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  headerText: { flex: 1, gap: 2 },
+  content: { padding: theme.space(5), gap: theme.space(5) },
+  header: { flexDirection: 'row', alignItems: 'center', gap: theme.space(4) },
+  headerText: { flex: 1, gap: theme.space(0.5) },
   iconBubble: {
     width: 60,
     height: 60,
-    borderRadius: 16,
+    borderRadius: theme.radius.xxl,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.card,
   },
-  section: { gap: 10 },
-  actions: { gap: 12, marginTop: 8 },
-});
+  section: { gap: theme.space(2.5) },
+  actions: { gap: theme.space(3), marginTop: theme.space(2) },
+  muted: { color: theme.colors.muted },
+}));
