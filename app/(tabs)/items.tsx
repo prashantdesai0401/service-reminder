@@ -1,4 +1,4 @@
-import { Link, router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, SectionList, View } from 'react-native';
@@ -61,32 +61,33 @@ export default function ItemsScreen() {
             renderItem={({ item }) => {
               const category = getCategory(item.category);
               return (
-                <Link href={{ pathname: '/item/[id]', params: { id: item.id } }} asChild>
-                  <Pressable style={styles.row}>
-                    <Icon name={category.icon} size={26} color="tint" />
-                    <View style={styles.rowText}>
-                      <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
-                      {item.next_due ? (
-                        <ThemedText
-                          numberOfLines={1}
-                          style={
-                            daysUntil(item.next_due) <= 0
-                              ? styles.danger
-                              : daysUntil(item.next_due) <= 7
-                                ? styles.warning
-                                : styles.muted
-                          }>
-                          {item.next_title} · {dueLabel(item.next_due).toLowerCase()}
-                        </ThemedText>
-                      ) : (
-                        <ThemedText numberOfLines={1} style={styles.muted}>
-                          No reminder set
-                        </ThemedText>
-                      )}
-                    </View>
-                    <Icon name="chevron-right" size={24} color="muted" />
-                  </Pressable>
-                </Link>
+                <Pressable
+                  onPress={() => router.push({ pathname: '/item/[id]', params: { id: item.id } })}
+                  accessibilityRole="button"
+                  style={styles.row}>
+                  <Icon name={category.icon} size={26} color="tint" />
+                  <View style={styles.rowText}>
+                    <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
+                    {item.next_due ? (
+                      <ThemedText
+                        numberOfLines={1}
+                        style={
+                          daysUntil(item.next_due) <= 0
+                            ? styles.danger
+                            : daysUntil(item.next_due) <= 7
+                              ? styles.warning
+                              : styles.muted
+                        }>
+                        {item.next_title} · {dueLabel(item.next_due).toLowerCase()}
+                      </ThemedText>
+                    ) : (
+                      <ThemedText numberOfLines={1} style={styles.muted}>
+                        No reminder set
+                      </ThemedText>
+                    )}
+                  </View>
+                  <Icon name="chevron-right" size={24} color="muted" />
+                </Pressable>
               );
             }}
           />

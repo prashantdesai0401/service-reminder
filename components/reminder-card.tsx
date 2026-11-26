@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -39,53 +39,52 @@ export function ReminderCard({
   ].filter(Boolean);
 
   return (
-    <Link href={{ pathname: '/reminder/[id]', params: { id: reminder.id } }} asChild>
-      <Pressable style={[styles.card, done && styles.done]}>
+    <Pressable
+      onPress={() => router.push({ pathname: '/reminder/[id]', params: { id: reminder.id } })}
+      accessibilityRole="button"
+      style={[styles.card, done && styles.done]}>
+      {withItem && <Icon name={getCategory(withItem.item_category).icon} size={26} color="tint" />}
+      <View style={styles.body}>
         {withItem && (
-          <Icon name={getCategory(withItem.item_category).icon} size={26} color="tint" />
-        )}
-        <View style={styles.body}>
-          {withItem && (
-            <ThemedText type="small" style={styles.muted}>
-              {withItem.item_name}
-            </ThemedText>
-          )}
-          <ThemedText type="defaultSemiBold">{reminder.title}</ThemedText>
-          <ThemedText style={done ? styles.muted : dueStyle(reminder.due_date)}>
-            {done ? 'Done' : dueLabel(reminder.due_date)}
-          </ThemedText>
           <ThemedText type="small" style={styles.muted}>
-            {details.join(' · ')}
+            {withItem.item_name}
           </ThemedText>
-          {reminder.prepaid && (
-            <View style={styles.badge}>
-              <ThemedText type="caption" style={styles.badgeText}>
-                Prepaid
-                {reminder.amount_paid ? ` ${formatMoney(reminder.amount_paid)}` : ''}
-              </ThemedText>
-            </View>
-          )}
-        </View>
-        {!done && (
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/reminder/done/[id]',
-                params: { id: reminder.id },
-              })
-            }
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={`Mark ${reminder.title} as done`}
-            style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
-            <Icon name="check-circle-outline" size={32} color="tint" />
-            <ThemedText type="caption" style={styles.tint}>
-              Done
-            </ThemedText>
-          </Pressable>
         )}
-      </Pressable>
-    </Link>
+        <ThemedText type="defaultSemiBold">{reminder.title}</ThemedText>
+        <ThemedText style={done ? styles.muted : dueStyle(reminder.due_date)}>
+          {done ? 'Done' : dueLabel(reminder.due_date)}
+        </ThemedText>
+        <ThemedText type="small" style={styles.muted}>
+          {details.join(' · ')}
+        </ThemedText>
+        {reminder.prepaid && (
+          <View style={styles.badge}>
+            <ThemedText type="caption" style={styles.badgeText}>
+              Prepaid
+              {reminder.amount_paid ? ` ${formatMoney(reminder.amount_paid)}` : ''}
+            </ThemedText>
+          </View>
+        )}
+      </View>
+      {!done && (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/reminder/done/[id]',
+              params: { id: reminder.id },
+            })
+          }
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={`Mark ${reminder.title} as done`}
+          style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
+          <Icon name="check-circle-outline" size={32} color="tint" />
+          <ThemedText type="caption" style={styles.tint}>
+            Done
+          </ThemedText>
+        </Pressable>
+      )}
+    </Pressable>
   );
 }
 
