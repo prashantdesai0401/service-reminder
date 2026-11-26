@@ -25,7 +25,7 @@ export function photoUri(stored: string) {
 async function saveAsset(asset: ImagePicker.ImagePickerAsset) {
   if (isWeb) return asset.uri; // Browser preview only; not kept after reload.
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  new File(asset.uri).copy(new File(photosDir(), name));
+  await new File(asset.uri).copy(new File(photosDir(), name));
   return name;
 }
 

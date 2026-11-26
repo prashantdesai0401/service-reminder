@@ -49,7 +49,9 @@ export default function MarkDoneScreen() {
 
   // If the screen is closed without saving, remove photos picked here so they don't pile up.
   const pending = useRef<string[]>([]);
-  pending.current = photos;
+  useEffect(() => {
+    pending.current = photos;
+  }, [photos]);
   const saved = useRef(false);
   useEffect(
     () => () => {
