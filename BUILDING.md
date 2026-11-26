@@ -1,11 +1,33 @@
 # Building Service Reminder as a real Android app
 
-Expo Go is great for trying changes, but it's a "player" for apps under development.
-To get **Service Reminder** as its own app on your phone (own icon, no Expo Go, no yellow
-warnings), Expo's free cloud service **EAS Build** turns this project into an installable
-`.apk` file.
+Expo's free cloud service **EAS Build** turns this project into installable `.apk` files.
+There are two kinds:
 
-You do this once per version. Day-to-day editing still uses `npx expo start` + Expo Go.
+| Build | App on your phone | Used for |
+|---|---|---|
+| **development** | "Service Reminder (Dev)", ID `com.servicereminder.app.dev` | Day-to-day editing with live reload |
+| **preview** | "Service Reminder", ID `com.servicereminder.app` | The real app you use, and releases |
+
+They have different IDs, so both can be installed side by side with separate data.
+
+> Expo Go no longer works for this app: Unistyles (the styling library) needs its own native
+> code, which Expo Go doesn't include. The development build replaces Expo Go.
+
+## Day-to-day editing (development build)
+
+1. Once, and again only when a **native library** is added or upgraded (anything installed
+   with `npx expo install` that has native code, or an Expo SDK upgrade), build and install it:
+   ```powershell
+   eas build --platform android --profile development
+   ```
+2. Every day: start the dev server, then open **Service Reminder (Dev)** on the phone. It
+   lists the running server, so tap it. If not, scan the QR code from the terminal.
+   ```powershell
+   npx expo start
+   ```
+3. Edits to code and styles show on the phone within a second or two, as before.
+
+Plain code and style changes **don't** need a new build. Only native-library changes do.
 
 ## One-time setup
 
@@ -42,7 +64,7 @@ eas build --platform android --profile preview
 
 1. Open the link (or scan the QR code) **on your Android phone** and download the `.apk`.
 2. Android will warn about installing from an unknown source. Allow it for your browser
-   (Settings → Apps → *your browser* → Install unknown apps), then tap Install.
+   (Settings → Apps → _your browser_ → Install unknown apps), then tap Install.
 3. Open **Service Reminder** from your app drawer.
 
 > Your data does **not** carry over from Expo Go — the installed app is a separate app with
